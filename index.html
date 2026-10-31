@@ -43,7 +43,6 @@ const pageCopy={
 'Settings':{sub:'Manage the appearance and demo workspace preferences.',html:`<section class="grid lower"><article class="card"><div class="sectionhead"><div><h3>Workspace preferences</h3><p>These controls affect this browser demo only.</p></div></div><div class="settingrow"><div><strong>Motion effects</strong><small>Animated orb and interface transitions</small></div><button class="pill" id="motionToggle">Turn off</button></div><div class="settingrow"><div><strong>Dashboard theme</strong><small>Silver blue · teal glass</small></div><span class="status">Active</span></div><div class="settingrow"><div><strong>Data mode</strong><small>Illustrative sample records only</small></div><span class="status pending">Demo</span></div></article><article class="card"><div class="sectionhead"><div><h3>About FinSight</h3></div></div><p class="subtitle">FinSight is a front-end prototype for financial analytics. It does not connect to bank accounts, payment gateways, live transaction feeds, or production fraud systems.</p><button class="pill" style="margin-top:18px" onclick="showPage('Overview')">Return to overview ↗</button></article></section>`}};
 function showPage(p){const b=[...document.querySelectorAll('#nav [data-page]')].find(x=>x.dataset.page===p);document.querySelectorAll('#nav [data-page]').forEach(x=>x.classList.toggle('active',x===b));document.getElementById('pagetitle').textContent=p==='Overview'?'Overview Dashboard':p;document.getElementById('eyebrow').textContent=p.toUpperCase()+' / FINANCIAL INTELLIGENCE';document.getElementById('pagesubtitle').textContent=p==='Overview'?'Your financial performance, transaction activity and key indicators.':(pageCopy[p]?.sub||p+' workspace tools and support.');const oldView=document.getElementById('dynamicPage');if(oldView)oldView.remove();dashboardSections.forEach(x=>x.style.display=p==='Overview'?'':'none');if(p!=='Overview'){const view=document.createElement('div');view.id='dynamicPage';view.className='dynamic-page reveal';view.innerHTML=pageCopy[p]?.html||'<section class="card"><h3>Help & support</h3><p class="subtitle">This is a demo workspace. Contact and support integrations are not connected yet.</p></section>';document.querySelector('main').appendChild(view);if(p==='Settings')document.getElementById('motionToggle')?.addEventListener('click',e=>{const off=document.body.classList.toggle('motion-off');e.currentTarget.textContent=off?'Turn on':'Turn off';document.querySelectorAll('*').forEach(el=>{if(off)el.style.animationPlayState='paused';else el.style.animationPlayState='running'});notify('Motion '+(off?'paused':'enabled'))});}window.scrollTo({top:0,behavior:'smooth'});}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
-document.querySelectorAll('[data-period]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-period]').forEach(x=>{x.classList.remove('primary');});b.classList.add('primary');const f=b.dataset.period;document.getElementById('transactions').textContent=f==='7D'?'5,842':f==='90D'?'71,402':f==='All Time'?'248,920':'24,892';document.getElementById('volume').textContent=f==='7D'?'₹1.96M':f==='90D'?'₹24.8M':f==='All Time'?'₹84.2M':'₹8.42M';notify('Showing '+f+' sample period');}));
 function csv(){const rows=[...document.querySelectorAll('#txTable tr')].map(tr=>[...tr.querySelectorAll('th,td')].map(td=>'"'+td.innerText.replaceAll('"','""')+'"').join(','));const blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='finsight-transactions-demo.csv';a.click();URL.revokeObjectURL(a.href);notify('CSV export started')}
 document.getElementById('export').addEventListener('click',csv);document.getElementById('downloadtable').addEventListener('click',csv);document.getElementById('viewall').addEventListener('click',()=>{document.querySelector('.tablecard').scrollIntoView({behavior:'smooth'});notify('Showing latest demo transactions')});document.getElementById('explore').addEventListener('click',()=>document.querySelector('.kpis').scrollIntoView({behavior:'smooth'}));document.getElementById('live').addEventListener('click',()=>notify('Live analytics animation is active · demo data'));document.getElementById('risk').addEventListener('click',()=>notify('Risk insights preview · demo data'));document.getElementById('range').addEventListener('click',()=>notify('Choose 7D, 30D, 90D or All Time above'));document.getElementById('help').addEventListener('click',()=>notify('FinSight demo workspace · help center coming soon'));
 
@@ -54,16 +53,46 @@ const periodFixtures={
 'All Time':{tx:'248,920',volume:'₹84.2M',success:'98.31%',avg:'₹3,401',top:[32,45,38,62,70,64,98],settled:[23,34,29,48,53,50,78],regions:[30,27,24,19],cities:[23.4,18.1,14.3,10.2,8.8,5.9,5.5]}
 };
 function pathFor(values,close=false){const x0=30,x1=630,y0=205,yTop=32,step=(x1-x0)/(values.length-1);const pts=values.map((v,i)=>[x0+i*step,y0-(v/100)*(y0-yTop)]);let d='M'+pts.map(p=>p.map(n=>n.toFixed(1)).join(' ')).join(' L');if(close)d+=' L630 205 L30 205 Z';return d;}
-function updatePeriod(period){const d=periodFixtures[period]||periodFixtures['30D'];const tx=document.getElementById('transactions');if(tx)tx.textContent=d.tx;const vol=document.getElementById('volume');if(vol)vol.textContent=d.volume;const kpis=[...document.querySelectorAll('main .kpis .card')];if(kpis.length>=4){kpis[2].querySelector('.value').textContent=d.success;kpis[3].querySelector('.value').textContent=d.avg;}
-const chart=document.querySelector('main .chart');if(chart){const paths=chart.querySelectorAll('path[fill="url(#fill)"],path[stroke="url(#line)"],path[stroke="#87a8d0"]');if(paths[0])paths[0].setAttribute('d',pathFor(d.top,true));if(paths[1])paths[1].setAttribute('d',pathFor(d.top));if(paths[2])paths[2].setAttribute('d',pathFor(d.settled));const labels=chart.querySelectorAll('.chart-label text');const labs=period==='7D'?['MON','TUE','WED','THU','FRI','SAT']:period==='90D'?['WEEK 1','WEEK 2','WEEK 3','WEEK 4','WEEK 5','WEEK 6']:period==='All Time'?['2023','2024','2025','Q1 26','Q2 26','Q3 26']:['WEEK 1','WEEK 2','WEEK 3','WEEK 4','WEEK 5','WEEK 6'];labels.forEach((el,i)=>el.textContent=labs[i]||'');}
-const geoVol=document.querySelector('[data-period-volume]');if(geoVol)geoVol.textContent=d.volume;const cityVals=document.querySelectorAll('[data-city]');cityVals.forEach((el,i)=>el.textContent='₹'+Number(d.cities[i]||0).toFixed(1)+'M');const regs=['North','West','South','East & Central'];regs.forEach((r,i)=>{const label=document.querySelector('[data-region="'+r+'"]');const bar=document.querySelector('[data-region-bar="'+r+'"]');if(label)label.textContent=d.regions[i]+'%';if(bar)bar.style.width=d.regions[i]+'%';});
-const dyn=document.getElementById('dynamicPage');if(dyn&&document.getElementById('pagetitle')?.textContent==='Payment Analytics'){const vals=dyn.querySelectorAll('.kpis .value');if(vals.length>=4){vals[0].textContent=d.volume;vals[1].textContent=d.success;vals[2].textContent=d.avg;vals[3].textContent=period==='7D'?'2.1 hrs':period==='90D'?'2.6 hrs':period==='All Time'?'2.5 hrs':'2.4 hrs';}}
-document.querySelectorAll('[data-period]').forEach(b=>{const active=b.dataset.period===period;b.classList.toggle('primary',active);});const eyebrow=document.getElementById('eyebrow');if(eyebrow)eyebrow.dataset.range=period;}
+function updatePeriod(period){
+ const d=periodFixtures[period]||periodFixtures['30D'];
+ const tx=document.getElementById('transactions');if(tx)tx.textContent=d.tx;
+ const vol=document.getElementById('volume');if(vol)vol.textContent=d.volume;
+ const overview=document.querySelectorAll('main > .kpis .card .value');
+ if(overview.length>=4){overview[2].textContent=d.success;overview[3].textContent=d.avg;}
+ const chart=document.querySelector('main > .lower .chart');
+ if(chart){
+   const paths=[...chart.querySelectorAll('path')];
+   const area=paths.find(p=>p.getAttribute('fill')==='url(#fill)');
+   const volumeLine=paths.find(p=>p.getAttribute('stroke')==='url(#line)');
+   const settledLine=paths.find(p=>p.getAttribute('stroke')==='#87a8d0');
+   if(area)area.setAttribute('d',pathFor(d.top,true));
+   if(volumeLine)volumeLine.setAttribute('d',pathFor(d.top));
+   if(settledLine)settledLine.setAttribute('d',pathFor(d.settled));
+   const labels=[...chart.querySelectorAll('.chart-label text')];
+   const labs=period==='7D'?['MON','TUE','WED','THU','FRI','SAT']:period==='90D'?['WEEK 1','WEEK 2','WEEK 3','WEEK 4','WEEK 5','WEEK 6']:period==='All Time'?['2023','2024','2025','Q1 26','Q2 26','Q3 26']:['WEEK 1','WEEK 2','WEEK 3','WEEK 4','WEEK 5','WEEK 6'];
+   labels.forEach((el,i)=>el.textContent=labs[i]||'');
+ }
+ const geoVol=document.querySelector('[data-period-volume]');if(geoVol)geoVol.textContent=d.volume;
+ document.querySelectorAll('[data-city]').forEach((el,i)=>el.textContent='₹'+Number(d.cities[i]||0).toFixed(1)+'M');
+ const regs=['North','West','South','East & Central'];
+ regs.forEach((r,i)=>{const label=document.querySelector('[data-region="'+r+'"]');const bar=document.querySelector('[data-region-bar="'+r+'"]');if(label)label.textContent=d.regions[i]+'%';if(bar)bar.style.width=d.regions[i]+'%';});
+ const dyn=document.getElementById('dynamicPage');
+ if(dyn&&document.getElementById('pagetitle')?.textContent==='Payment Analytics'){
+   const vals=dyn.querySelectorAll('.kpis .value');
+   if(vals.length>=4){vals[0].textContent=d.volume;vals[1].textContent=d.success;vals[2].textContent=d.avg;vals[3].textContent=period==='7D'?'2.1 hrs':period==='90D'?'2.6 hrs':period==='All Time'?'2.5 hrs':'2.4 hrs';}
+   const shares=period==='7D'?[43,29,19,9]:period==='90D'?[47,26,18,9]:period==='All Time'?[45,28,18,9]:[46,27,18,9];
+   dyn.querySelectorAll('.barlist .bar i').forEach((bar,i)=>{if(shares[i]!==undefined)bar.style.width=shares[i]+'%';});
+   dyn.querySelectorAll('.barlist .barlabel b').forEach((label,i)=>{if(shares[i]!==undefined)label.textContent=shares[i]+'%';});
+ }
+ document.querySelectorAll('[data-period]').forEach(btn=>btn.classList.toggle('primary',btn.dataset.period===period));
+ const eyebrow=document.getElementById('eyebrow');if(eyebrow)eyebrow.dataset.range=period;
+ const notice=document.getElementById('periodNotice');if(notice)notice.textContent='Showing '+period+' sample period';
+}
 document.querySelectorAll('[data-period]').forEach(b=>b.addEventListener('click',()=>updatePeriod(b.dataset.period)));
 const oldShowPage=showPage;showPage=function(p){oldShowPage(p);updatePeriod(document.querySelector('[data-period].primary')?.dataset.period||'30D');};
 document.getElementById('range')?.addEventListener('click',()=>{const active=document.querySelector('[data-period].primary')?.dataset.period||'30D';notify('Selected reporting range: '+active);});
 updatePeriod('30D');
 
-document.querySelectorAll('[data-period]').forEach(b=>b.addEventListener('click',()=>{const p=b.dataset.period;const shares=p==='7D'?[43,29,19,9]:p==='90D'?[47,26,18,9]:p==='All Time'?[45,28,18,9]:[46,27,18,9];const dyn=document.getElementById('dynamicPage');if(dyn&&document.getElementById('pagetitle')?.textContent==='Payment Analytics'){dyn.querySelectorAll('.barlist .bar i').forEach((bar,i)=>{if(shares[i]!==undefined)bar.style.width=shares[i]+'%'});dyn.querySelectorAll('.barlist .barlabel b').forEach((label,i)=>{if(shares[i]!==undefined)label.textContent=shares[i]+'%'});}}));
+
 </script>
 </body></html>
