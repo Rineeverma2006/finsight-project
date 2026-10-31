@@ -13,3 +13,6 @@ This is a front-end demo with illustrative sample metrics and transactions. It i
 ## Run locally
 
 Open `index.html` in a browser, or run `python -m http.server 8000` from this folder and visit `http://localhost:8000`.
+
+
+Deployment workflow refreshed on 2026-10-31 to retry GitHub Pages publishing.
