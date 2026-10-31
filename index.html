@@ -64,5 +64,6 @@ const oldShowPage=showPage;showPage=function(p){oldShowPage(p);updatePeriod(docu
 document.getElementById('range')?.addEventListener('click',()=>{const active=document.querySelector('[data-period].primary')?.dataset.period||'30D';notify('Selected reporting range: '+active);});
 updatePeriod('30D');
 
+document.querySelectorAll('[data-period]').forEach(b=>b.addEventListener('click',()=>{const p=b.dataset.period;const shares=p==='7D'?[43,29,19,9]:p==='90D'?[47,26,18,9]:p==='All Time'?[45,28,18,9]:[46,27,18,9];const dyn=document.getElementById('dynamicPage');if(dyn&&document.getElementById('pagetitle')?.textContent==='Payment Analytics'){dyn.querySelectorAll('.barlist .bar i').forEach((bar,i)=>{if(shares[i]!==undefined)bar.style.width=shares[i]+'%'});dyn.querySelectorAll('.barlist .barlabel b').forEach((label,i)=>{if(shares[i]!==undefined)label.textContent=shares[i]+'%'});}}));
 </script>
 </body></html>
